@@ -1,0 +1,38 @@
+#!/bin/sh
+
+# Sample setup for '/etc/munin/plugin-conf.d/munin-node':
+#
+# [owncloud_*]
+# env.dbuser owncloud
+# env.dbpassword password
+# env.dbname owncloud
+
+envuser=${dbuser:-owncloud}
+envpassword=${dbpassword:-password}
+envdb=${dbname:-owncloud}
+
+query="SELECT oc_users.uid, COUNT(oc_authtoken.uid) AS count FROM oc_users LEFT JOIN oc_authtoken ON oc_authtoken.uid = oc_users.uid GROUP BY oc_users.uid ORDER BY oc_users.uid ASC"
+
+case $1 in
+  config)
+    echo graph_title Owncloud Session
+    echo graph_vlabel bytes
+    echo graph_args -l 0
+    echo graph_category owncloud
+    
+    mysql --user=$envuser --password=$envpassword --execute="$query" $envdb | while read uid count; do
+      if [ "$count" != "count" ]
+      then
+        echo "$uid.label $uid"
+      fi
+    done
+
+  exit 0;;
+esac
+
+mysql --user=$envuser --password=$envpassword --execute="$query" $envdb | while read uid count; do
+  if [ "$count" != "count" ]
+  then
+    echo "$uid.value $count"
+  fi
+done
