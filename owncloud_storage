@@ -11,6 +11,8 @@ envuser=${dbuser:-owncloud}
 envpassword=${dbpassword:-password}
 envdb=${dbname:-owncloud}
 
+query="SELECT oc_users.uid, oc_filecache.size FROM oc_users LEFT JOIN oc_mounts ON oc_mounts.user_id = oc_users.uid LEFT JOIN oc_filecache ON oc_filecache.storage = oc_mounts.storage_id WHERE oc_mounts.mount_point = concat(concat('/', oc_users.uid), '/') AND oc_filecache.path = 'files' ORDER BY oc_users.uid ASC"
+
 case $1 in
   config)
     echo graph_title Owncloud Storage
@@ -18,7 +20,7 @@ case $1 in
     echo graph_args --base 1024 -l 0
     echo graph_category owncloud
     
-    mysql --user=$envuser --password=$envpassword --execute="SELECT oc_users.uid, oc_filecache.size FROM oc_users LEFT JOIN oc_mounts ON oc_mounts.user_id = oc_users.uid LEFT JOIN oc_filecache ON oc_filecache.storage = oc_mounts.storage_id WHERE oc_mounts.mount_point = concat(concat('/', oc_users.uid), '/') AND oc_filecache.path = 'files'" $envdb | while read uid size; do
+    mysql --user=$envuser --password=$envpassword --execute="$query" $envdb | while read uid size; do
       if [ $size != 'size' ]
       then
         echo "$uid.label $uid"
@@ -28,7 +30,7 @@ case $1 in
   exit 0;;
 esac
 
-mysql --user=$envuser --password=$envpassword --execute="SELECT oc_users.uid, oc_filecache.size FROM oc_users LEFT JOIN oc_mounts ON oc_mounts.user_id = oc_users.uid LEFT JOIN oc_filecache ON oc_filecache.storage = oc_mounts.storage_id WHERE oc_mounts.mount_point = concat(concat('/', oc_users.uid), '/') AND oc_filecache.path = 'files'" $envdb | while read uid size; do
+mysql --user=$envuser --password=$envpassword --execute="$query" $envdb | while read uid size; do
   if [ $size != 'size' ]
   then
     echo "$uid.value $size"
