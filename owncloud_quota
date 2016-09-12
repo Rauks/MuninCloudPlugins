@@ -11,7 +11,7 @@ envuser=${dbuser:-owncloud}
 envpassword=${dbpassword:-password}
 envdb=${dbname:-owncloud}
 
-query="SELECT oc_users.uid, oc_preferences.configvalue FROM oc_users LEFT JOIN oc_preferences ON oc_preferences.userid = oc_users.uid WHERE oc_preferences.configkey = 'quota'  ORDER BY oc_users.uid ASC"
+query="SELECT oc_users.uid, IF(oc_preferences.configvalue = 'none', '0', oc_preferences.configvalue) AS configvalue FROM oc_users LEFT JOIN oc_preferences ON oc_preferences.userid = oc_users.uid WHERE oc_preferences.configkey = 'quota' ORDER BY oc_users.uid ASC"
 
 dehumanise() {
   # Owncloud looks to be using powers of 2 in their calculus.
