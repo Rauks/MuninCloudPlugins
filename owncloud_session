@@ -15,7 +15,7 @@ query="SELECT oc_users.uid, COUNT(oc_authtoken.uid) AS count FROM oc_users LEFT 
 
 case $1 in
   config)
-    echo graph_title Owncloud Session
+    echo graph_title Owncloud users sessions
     echo graph_vlabel bytes
     echo graph_args -l 0
     echo graph_category owncloud
