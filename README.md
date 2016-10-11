@@ -2,7 +2,7 @@
 Simple Munin plugins for monitoring Owncloud
 
 ## Plugins
-* `owncloud_storage` show the disk space usage per user (**size of the *file* folder only**, this does not include the content of *file_trashbin* or *file_versions* ones for instance).
+* `owncloud_storage` show the disk space usage per user (**size of the *file* folder only**, this does not include the content of *file_trashbin* or *file_versions* ones for instance). Include a quota lookup per user (if a quota is set) and provide a critical thresholds trigger when 95% of the quota is reached (parametrizable through *env.quotaratio*). 
 * `owncloud_realstorage` show the disk space usage per user (**real size**, including the *file*, *file_trashbin*, *file_versions* and other working folders).
 * `owncloud_quota` show the users quotas (*none* or *default* are shown as *0*)
 * `owncloud_session` show the number of users opened sessions
@@ -20,7 +20,7 @@ env.dbname owncloud
 
 `env.dbuser` can be any user having a SELECT right on the owncloud `env.dbname` database.
 Or at least a SELECT right on the following tables:
-* `owncloud_storage`: oc_users, oc_filecache, oc_mounts
+* `owncloud_storage`: oc_users, oc_filecache, oc_mounts, oc_preferences
 * `owncloud_realstorage`: oc_users, oc_filecache, oc_mounts
 * `owncloud_quota`: oc_users, oc_preferences
 * `owncloud_session`: oc_users, oc_authtoken
