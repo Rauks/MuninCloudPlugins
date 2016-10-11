@@ -15,10 +15,11 @@ query="SELECT oc_users.uid, COUNT(oc_authtoken.uid) AS count FROM oc_users LEFT 
 
 case $1 in
   config)
-    echo graph_title Owncloud users sessions
-    echo graph_vlabel sessions
-    echo graph_args -l 0
-    echo graph_category owncloud
+    echo "graph_title Owncloud users sessions"
+    echo "graph_vlabel sessions"
+    echo "graph_args -l 0"
+    echo "graph_category owncloud"
+    echo "graph_info Show the number of users opened sessions."
     
     mysql --user=$envuser --password=$envpassword --execute="$query" $envdb | while read uid count; do
       if [ "$count" != "count" ]

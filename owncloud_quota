@@ -38,10 +38,11 @@ dehumanise() {
 
 case $1 in
   config)
-    echo graph_title Owncloud users quotas
-    echo graph_vlabel bytes
-    echo graph_args --base 1024 -l 0
-    echo graph_category owncloud
+    echo "graph_title Owncloud users quotas"
+    echo "graph_vlabel bytes"
+    echo "graph_args --base 1024 -l 0"
+    echo "graph_category owncloud"
+    echo "graph_info Show the users quotas (none or default are shown as 0)"
     
     mysql --user=$envuser --password=$envpassword --execute="$query" $envdb | while read uid configvalue; do
       if [ "$configvalue" != "configvalue" ]

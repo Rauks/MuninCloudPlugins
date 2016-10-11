@@ -15,10 +15,11 @@ query="SELECT oc_users.uid, COUNT(oc_share.uid_owner) AS count FROM oc_users LEF
 
 case $1 in
   config)
-    echo graph_title Owncloud users shares
-    echo graph_vlabel shares
-    echo graph_args -l 0
-    echo graph_category owncloud
+    echo "graph_title Owncloud users shares"
+    echo "graph_vlabel shares"
+    echo "graph_args -l 0"
+    echo "graph_category owncloud"
+    echo "graph_info Show the numbers of shares (shared files or folders) per user."
     
     mysql --user=$envuser --password=$envpassword --execute="$query" $envdb | while read uid count; do
       if [ "$count" != "count" ]

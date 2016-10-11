@@ -6,31 +6,74 @@
 # env.dbuser owncloud
 # env.dbpassword password
 # env.dbname owncloud
+# env.quotaratio 0.99
 
 envuser=${dbuser:-owncloud}
 envpassword=${dbpassword:-password}
 envdb=${dbname:-owncloud}
 
-query="SELECT oc_users.uid, oc_filecache.size FROM oc_users LEFT JOIN oc_mounts ON oc_mounts.user_id = oc_users.uid LEFT JOIN oc_filecache ON oc_filecache.storage = oc_mounts.storage_id WHERE oc_mounts.mount_point = concat(concat('/', oc_users.uid), '/') AND oc_filecache.path = 'files' ORDER BY oc_users.uid ASC"
+envquotaratio=${quotaratio:-0.95}
+
+query="SELECT oc_users.uid, oc_filecache.size, IF(oc_preferences.configvalue = 'none', '0', oc_preferences.configvalue) AS quota FROM oc_users LEFT JOIN oc_mounts ON oc_mounts.user_id = oc_users.uid LEFT JOIN oc_filecache ON oc_filecache.storage = oc_mounts.storage_id LEFT JOIN oc_preferences ON oc_preferences.userid = oc_users.uid WHERE oc_mounts.mount_point = concat(concat('/', oc_users.uid), '/') AND oc_filecache.path = 'files' AND oc_preferences.configkey = 'quota' ORDER BY oc_users.uid ASC"
+
+dehumanise() {
+  # Owncloud looks to be using powers of 2 in all their calculus.
+  for v in "$@"
+  do
+    echo $v | tr -d ' ' | awk \
+      'BEGIN{IGNORECASE = 1}
+       function printpower(n,b,p) {printf "%u\n", n*b^p; next}
+       /[0-9]$/{print $1;next};
+       /K(iB)?$/{printpower($1,  2, 10)};
+       /M(iB)?$/{printpower($1,  2, 20)};
+       /G(iB)?$/{printpower($1,  2, 30)};
+       /T(iB)?$/{printpower($1,  2, 40)};
+       /KB$/{    printpower($1,  2, 10)};
+       /MB$/{    printpower($1,  2, 20)};
+       /GB$/{    printpower($1,  2, 30)};
+       /TB$/{    printpower($1,  2, 40)}'
+  done
+}
+humanise() {
+  for v in "$@"
+  do
+    echo $v | awk \
+      'function human(x) {
+        if (x<1000) {return x} else {x/=1024}
+        s="kMGTEPYZ";
+        while (x>=1000 && length(s)>1)
+          {x/=1024; s=substr(s,2)}
+        return int(x+0.5) substr(s,1,1)
+      }
+      {sub(/^[0-9]+/, human($1)); print}'
+  done
+}
 
 case $1 in
   config)
-    echo graph_title Owncloud storage usage
-    echo graph_vlabel bytes
-    echo graph_args --base 1024 -l 0
-    echo graph_category owncloud
-    
-    mysql --user=$envuser --password=$envpassword --execute="$query" $envdb | while read uid size; do
+    echo "graph_title Owncloud storage usage"
+    echo "graph_vlabel bytes"
+    echo "graph_args --base 1024 -l 0"
+    echo "graph_category owncloud"
+    echo "graph_info The storage usage show the user storage utilization (size of the file folder, not including the content of file_trashbin or file_versions). For users having a quota set, a critical thresholds is triggered when `echo "scale=0; ($envquotaratio*100)/1" | bc -l`% of the quota usage is reached."
+
+    mysql --user=$envuser --password=$envpassword --execute="$query" $envdb | while read uid size quota; do
       if [ $size != 'size' ]
       then
         echo "$uid.label $uid"
+        quotavalue=`dehumanise "$quota"`
+        if [ $quotavalue -gt 0 ]
+        then
+          echo "$uid.critical `echo "scale=0; ($quotavalue*$envquotaratio)/1" | bc -l`"
+          echo "$uid.info Quota is `humanise $quotavalue`"
+        fi
       fi
     done
 
   exit 0;;
 esac
 
-mysql --user=$envuser --password=$envpassword --execute="$query" $envdb | while read uid size; do
+mysql --user=$envuser --password=$envpassword --execute="$query" $envdb | while read uid size quota; do
   if [ $size != 'size' ]
   then
     echo "$uid.value $size"
