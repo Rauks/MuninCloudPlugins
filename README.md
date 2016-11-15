@@ -35,10 +35,15 @@ The pulgins are currently assuming that the owncloud database is a MySQL one, on
 ### Graphs
 
 **cloud_disk:**
+
 ![cloud_disk](samples/cloud_disk-month.png)
+
 **cloud_session:**
+
 ![cloud_session](samples/cloud_session-day.png)
+
 **cloud_storage:**
+
 ![cloud_storage](samples/cloud_storage-month.png)
 
 ### Graph informations
