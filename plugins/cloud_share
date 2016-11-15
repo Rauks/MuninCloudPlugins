@@ -1,0 +1,41 @@
+#!/bin/sh
+
+# Sample setup for '/etc/munin/plugin-conf.d/munin-node':
+#
+# [cloud_*]
+# env.dbuser owncloud
+# env.dbpassword password
+# env.dbname owncloud
+# env.dbtableprefix oc_
+
+envuser=${dbuser:-owncloud}
+envpassword=${dbpassword:-password}
+envdb=${dbname:-owncloud}
+envtableprefix=${dbtableprefix:-oc_}
+
+query="SELECT ${envtableprefix}users.uid, COUNT(${envtableprefix}share.uid_owner) AS count FROM ${envtableprefix}users LEFT JOIN ${envtableprefix}share ON ${envtableprefix}share.uid_owner = ${envtableprefix}users.uid GROUP BY ${envtableprefix}users.uid ORDER BY ${envtableprefix}users.uid ASC"
+
+case $1 in
+  config)
+    echo "graph_title Cloud users shares"
+    echo "graph_vlabel shares"
+    echo "graph_args -l 0"
+    echo "graph_category cloud"
+    echo "graph_info Show the numbers of shares (shared files or folders) per user."
+    
+    mysql --user=$envuser --password=$envpassword --execute="$query" $envdb | while read uid count; do
+      if [ "$count" != "count" ]
+      then
+        echo "$uid.label $uid"
+      fi
+    done
+
+  exit 0;;
+esac
+
+mysql --user=$envuser --password=$envpassword --execute="$query" $envdb | while read uid count; do
+  if [ "$count" != "count" ]
+  then
+    echo "$uid.value $count"
+  fi
+done

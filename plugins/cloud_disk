@@ -1,0 +1,41 @@
+#!/bin/sh
+
+# Sample setup for '/etc/munin/plugin-conf.d/munin-node':
+#
+# [cloud_*]
+# env.dbuser owncloud
+# env.dbpassword password
+# env.dbname owncloud
+# env.dbtableprefix oc_
+
+envuser=${dbuser:-owncloud}
+envpassword=${dbpassword:-password}
+envdb=${dbname:-owncloud}
+envtableprefix=${dbtableprefix:-oc_}
+
+query="SELECT ${envtableprefix}users.uid, ${envtableprefix}filecache.size FROM ${envtableprefix}users LEFT JOIN ${envtableprefix}mounts ON ${envtableprefix}mounts.user_id = ${envtableprefix}users.uid LEFT JOIN ${envtableprefix}filecache ON ${envtableprefix}filecache.storage = ${envtableprefix}mounts.storage_id WHERE ${envtableprefix}mounts.mount_point = concat(concat('/', ${envtableprefix}users.uid), '/') AND ${envtableprefix}filecache.path = '' ORDER BY ${envtableprefix}users.uid ASC"
+
+case $1 in
+  config)
+    echo "graph_title Cloud disk usage"
+    echo "graph_vlabel bytes"
+    echo "graph_args --base 1024 -l 0"
+    echo "graph_category cloud"
+    echo "graph_info The storage disk usage show the disk space usage per user (real size on the disk, including the file, file_trashbin, file_versions and other working folders)."
+    
+    mysql --user=$envuser --password=$envpassword --execute="$query" $envdb | while read uid size; do
+      if [ $size != 'size' ]
+      then
+        echo "$uid.label $uid"
+      fi
+    done
+
+  exit 0;;
+esac
+
+mysql --user=$envuser --password=$envpassword --execute="$query" $envdb | while read uid size; do
+  if [ $size != 'size' ]
+  then
+    echo "$uid.value $size"
+  fi
+done
