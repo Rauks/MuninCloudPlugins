@@ -26,6 +26,7 @@ case $1 in
     mysql --user=$envuser --password=$envpassword --execute="$query" $envdb | while read uid count; do
       if [ "$count" != "count" ]
       then
+        uid=`echo $uid | sed 's/\./_/'g`
         echo "$uid.label $uid"
       fi
     done
@@ -36,6 +37,7 @@ esac
 mysql --user=$envuser --password=$envpassword --execute="$query" $envdb | while read uid count; do
   if [ "$count" != "count" ]
   then
+    uid=`echo $uid | sed 's/\./_/'g`
     echo "$uid.value $count"
   fi
 done

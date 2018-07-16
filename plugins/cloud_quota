@@ -49,6 +49,7 @@ case $1 in
     mysql --user=$envuser --password=$envpassword --execute="$query" $envdb | while read uid configvalue; do
       if [ "$configvalue" != "configvalue" ]
       then
+        uid=`echo $uid | sed 's/\./_/'g`
         echo "$uid.label $uid"
       fi
     done
@@ -60,6 +61,7 @@ mysql --user=$envuser --password=$envpassword --execute="$query" $envdb | while 
   if [ "$configvalue" != "configvalue" ]
   then
     quota=`dehumanise "$configvalue"`
+    uid=`echo $uid | sed 's/\./_/'g`
     echo "$uid.value $quota"
   fi
 done

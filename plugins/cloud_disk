@@ -30,6 +30,7 @@ case $1 in
       while read uid size; do
         if [ $size != 'size' ]
         then
+          uid=`echo $uid | sed 's/\./_/'g`
           echo "$uid.label $uid"
           if [ $i -eq 0 ]
           then
@@ -48,6 +49,7 @@ esac
 mysql --user=$envuser --password=$envpassword --execute="$query" $envdb | while read uid size; do
   if [ $size != 'size' ]
   then
+    uid=`echo $uid | sed 's/\./_/'g`
     echo "$uid.value $size"
   fi
 done

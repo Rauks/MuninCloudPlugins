@@ -66,6 +66,7 @@ case $1 in
       while read uid size quota; do
         if [ $size != 'size' ]
         then
+          uid=`echo $uid | sed 's/\./_/'g`
           echo "$uid.label $uid"
           quotavalue=`dehumanise "$quota"`
           if [ $quotavalue -gt 0 ]
@@ -90,6 +91,7 @@ esac
 mysql --user=$envuser --password=$envpassword --execute="$query" $envdb | while read uid size quota; do
   if [ $size != 'size' ]
   then
+    uid=`echo $uid | sed 's/\./_/'g`
     echo "$uid.value $size"
   fi
 done
